@@ -1,0 +1,16 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+
+# 本地憑證（請勿上傳）
+.env
+
+# TDX 快取資料（個人資料，不上傳）
+traffic_cache.json
+
+# 每次 reset 重新產生的 SUMO 檔案
+nets/rl_env.rou.xml
+nets/rl_env.sumocfg

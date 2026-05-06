@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<routes>
+    <!-- 車輛類型 -->
+    <vType id="car" accel="2.6" decel="4.5" sigma="0.5" length="5" maxSpeed="13.89"/>
+
+    <!-- 路線定義 -->
+    <route id="route_EB_straight" edges="WE CE"/>
+    <route id="route_EB_left" edges="WE CN"/>
+    <route id="route_EB_right" edges="WE CS"/>
+    <route id="route_WB_straight" edges="EW CW"/>
+    <route id="route_WB_left" edges="EW CS"/>
+    <route id="route_WB_right" edges="EW CN"/>
+    <route id="route_NB_straight" edges="SN CN"/>
+    <route id="route_NB_left" edges="SN CW"/>
+    <route id="route_NB_right" edges="SN CE"/>
+    <route id="route_SB_straight" edges="NS CS"/>
+    <route id="route_SB_left" edges="NS CE"/>
+    <route id="route_SB_right" edges="NS CW"/>
+
+    <!-- 車流（依 TDX/Mock 資料） -->
+    <flow id="flow_EB_straight" route="route_EB_straight" begin="0" end="3600" period="4.2857" departLane="best" departSpeed="max"/>
+    <flow id="flow_EB_left" route="route_EB_left" begin="0" end="3600" period="30.0" departLane="best" departSpeed="max"/>
+    <flow id="flow_EB_right" route="route_EB_right" begin="0" end="3600" period="15.0" departLane="best" departSpeed="max"/>
+    <flow id="flow_WB_straight" route="route_WB_straight" begin="0" end="3600" period="5.1429" departLane="best" departSpeed="max"/>
+    <flow id="flow_WB_left" route="route_WB_left" begin="0" end="3600" period="36.0" departLane="best" departSpeed="max"/>
+    <flow id="flow_WB_right" route="route_WB_right" begin="0" end="3600" period="18.0" departLane="best" departSpeed="max"/>
+    <flow id="flow_NB_straight" route="route_NB_straight" begin="0" end="3600" period="6.4286" departLane="best" departSpeed="max"/>
+    <flow id="flow_NB_left" route="route_NB_left" begin="0" end="3600" period="45.0" departLane="best" departSpeed="max"/>
+    <flow id="flow_NB_right" route="route_NB_right" begin="0" end="3600" period="22.5" departLane="best" departSpeed="max"/>
+    <flow id="flow_SB_straight" route="route_SB_straight" begin="0" end="3600" period="7.3469" departLane="best" departSpeed="max"/>
+    <flow id="flow_SB_left" route="route_SB_left" begin="0" end="3600" period="51.4286" departLane="best" departSpeed="max"/>
+    <flow id="flow_SB_right" route="route_SB_right" begin="0" end="3600" period="25.7143" departLane="best" departSpeed="max"/>
+</routes>
