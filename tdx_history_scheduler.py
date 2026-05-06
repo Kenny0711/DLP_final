@@ -137,6 +137,80 @@ def has_valid_route_data(traffic_data: list) -> bool:
     return False
 
 
+def _positive_volume(value) -> int:
+    try:
+        volume = int(float(value))
+    except (TypeError, ValueError):
+        return 0
+    return volume if volume > 0 else 0
+
+
+def fetch_tdx_traffic_nonnegative(token: str) -> list:
+    """
+    Fetch TDX live traffic while ignoring negative sentinel values.
+
+    Some TDX VD vehicle records report negative Volume values when live data is
+    unavailable. Those are not real traffic counts and must not be summed into
+    SUMO flows.
+    """
+    metadata = tdx_crawler.fetch_vd_metadata(token)
+    if not metadata:
+        print("[警告] 找不到目標路口的 VD 感測器，確認 TARGET_ROADS 設定是否正確")
+        return []
+
+    time.sleep(1)
+    url = f"{tdx_crawler.TDX_API_BASE}/v2/Road/Traffic/Live/VD/City/Taipei?$format=JSON"
+    headers = {"Authorization": f"Bearer {token}"}
+    resp = requests.get(url, headers=headers)
+    resp.raise_for_status()
+    raw = resp.json()
+
+    live_list = raw.get("VDLives", [])
+    dir_map = {"E": "EB", "W": "WB", "N": "NB", "S": "SB"}
+    dir_volumes = {"EB": [], "WB": [], "NB": [], "SB": []}
+    ignored_negative = 0
+
+    for vd in live_list:
+        vdid = vd.get("VDID", "")
+        if vdid not in metadata:
+            continue
+
+        bearing = metadata[vdid].get("bearing")
+        if bearing not in dir_map:
+            continue
+        direction = dir_map[bearing]
+
+        total_volume = 0
+        for link in vd.get("LinkFlows", []):
+            for lane in link.get("Lanes", []):
+                for vehicle in lane.get("Vehicles", []):
+                    raw_volume = vehicle.get("Volume", 0)
+                    if _positive_volume(raw_volume) == 0 and raw_volume not in (0, "0", None):
+                        ignored_negative += 1
+                    total_volume += _positive_volume(raw_volume)
+
+        if total_volume > 0:
+            dir_volumes[direction].append(total_volume * 12)
+
+    if ignored_negative:
+        print(f"[資料] 已忽略 {ignored_negative} 筆 TDX 負值/無效 Volume")
+
+    if not dir_volumes["NB"] and dir_volumes["SB"]:
+        avg_sb = sum(dir_volumes["SB"]) / len(dir_volumes["SB"])
+        dir_volumes["NB"] = [int(avg_sb * 0.9)]
+        print("[資料] NB 無感測器，以 SB 平均值 × 0.9 估算")
+
+    results = []
+    for direction, volumes in dir_volumes.items():
+        if volumes:
+            avg = int(sum(volumes) / len(volumes))
+            results.append({"direction": direction, "volume_per_hour": avg})
+        else:
+            print(f"[警告] {direction} 無正流量資料，跳過")
+
+    return results
+
+
 def fetch_traffic_snapshot(token=None) -> list:
     now = datetime.datetime.now()
 
@@ -151,7 +225,7 @@ def fetch_traffic_snapshot(token=None) -> list:
         return data
 
     token = token or tdx_crawler.get_tdx_token()
-    return tdx_crawler.fetch_tdx_traffic(token)
+    return fetch_tdx_traffic_nonnegative(token)
 
 
 def build_route_xml(traffic_data: list, timestamp=None) -> str:
