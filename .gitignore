@@ -14,3 +14,5 @@ traffic_cache.json
 # 每次 reset 重新產生的 SUMO 檔案
 nets/rl_env.rou.xml
 nets/rl_env.sumocfg
+
+traffic_history/
