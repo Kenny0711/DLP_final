@@ -16,3 +16,6 @@ nets/rl_env.rou.xml
 nets/rl_env.sumocfg
 
 traffic_history/
+
+# 本地簡介文件（不上傳）
+簡介.md
