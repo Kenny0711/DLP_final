@@ -14,14 +14,32 @@ import argparse
 import datetime
 import os
 import time
-from xml.sax.saxutils import escape
 
 import requests
+
+
+def load_local_env() -> None:
+    env_file = os.path.join(os.path.dirname(os.path.abspath(__file__)), ".env")
+    if not os.path.exists(env_file):
+        return
+
+    with open(env_file, "r", encoding="utf-8") as fh:
+        for line in fh:
+            line = line.strip()
+            if not line or line.startswith("#") or "=" not in line:
+                continue
+            key, value = line.split("=", 1)
+            key = key.strip()
+            value = value.strip().strip('"').strip("'")
+            if key and key not in os.environ:
+                os.environ[key] = value
+
+
+load_local_env()
 
 import tdx_crawler
 
 
-# 這兩個名字只用來命名輸出的歷史檔案，不會改 tdx_crawler.py 的搜尋條件。
 INTERSECTION_ROAD1 = "復興南路一段"
 INTERSECTION_ROAD2 = "忠孝東路"
 INTERSECTION_NAME = f"{INTERSECTION_ROAD1}_x_{INTERSECTION_ROAD2}"
@@ -110,6 +128,89 @@ def get_current_period(now=None) -> str:
     return "off_peak"
 
 
+def has_valid_route_data(traffic_data: list) -> bool:
+    for entry in traffic_data:
+        direction = entry.get("direction")
+        volume_per_hour = entry.get("volume_per_hour", 0)
+        if direction in TURN_MOVEMENTS and volume_per_hour > 0:
+            return True
+    return False
+
+
+def _positive_volume(value) -> int:
+    try:
+        volume = int(float(value))
+    except (TypeError, ValueError):
+        return 0
+    return volume if volume > 0 else 0
+
+
+def fetch_tdx_traffic_nonnegative(token: str) -> list:
+    """
+    Fetch TDX live traffic while ignoring negative sentinel values.
+
+    Some TDX VD vehicle records report negative Volume values when live data is
+    unavailable. Those are not real traffic counts and must not be summed into
+    SUMO flows.
+    """
+    metadata = tdx_crawler.fetch_vd_metadata(token)
+    if not metadata:
+        print("[警告] 找不到目標路口的 VD 感測器，確認 TARGET_ROADS 設定是否正確")
+        return []
+
+    time.sleep(1)
+    url = f"{tdx_crawler.TDX_API_BASE}/v2/Road/Traffic/Live/VD/City/Taipei?$format=JSON"
+    headers = {"Authorization": f"Bearer {token}"}
+    resp = requests.get(url, headers=headers)
+    resp.raise_for_status()
+    raw = resp.json()
+
+    live_list = raw.get("VDLives", [])
+    dir_map = {"E": "EB", "W": "WB", "N": "NB", "S": "SB"}
+    dir_volumes = {"EB": [], "WB": [], "NB": [], "SB": []}
+    ignored_negative = 0
+
+    for vd in live_list:
+        vdid = vd.get("VDID", "")
+        if vdid not in metadata:
+            continue
+
+        bearing = metadata[vdid].get("bearing")
+        if bearing not in dir_map:
+            continue
+        direction = dir_map[bearing]
+
+        total_volume = 0
+        for link in vd.get("LinkFlows", []):
+            for lane in link.get("Lanes", []):
+                for vehicle in lane.get("Vehicles", []):
+                    raw_volume = vehicle.get("Volume", 0)
+                    if _positive_volume(raw_volume) == 0 and raw_volume not in (0, "0", None):
+                        ignored_negative += 1
+                    total_volume += _positive_volume(raw_volume)
+
+        if total_volume > 0:
+            dir_volumes[direction].append(total_volume * 12)
+
+    if ignored_negative:
+        print(f"[資料] 已忽略 {ignored_negative} 筆 TDX 負值/無效 Volume")
+
+    if not dir_volumes["NB"] and dir_volumes["SB"]:
+        avg_sb = sum(dir_volumes["SB"]) / len(dir_volumes["SB"])
+        dir_volumes["NB"] = [int(avg_sb * 0.9)]
+        print("[資料] NB 無感測器，以 SB 平均值 × 0.9 估算")
+
+    results = []
+    for direction, volumes in dir_volumes.items():
+        if volumes:
+            avg = int(sum(volumes) / len(volumes))
+            results.append({"direction": direction, "volume_per_hour": avg})
+        else:
+            print(f"[警告] {direction} 無正流量資料，跳過")
+
+    return results
+
+
 def fetch_traffic_snapshot(token=None) -> list:
     now = datetime.datetime.now()
 
@@ -124,15 +225,17 @@ def fetch_traffic_snapshot(token=None) -> list:
         return data
 
     token = token or tdx_crawler.get_tdx_token()
-    return tdx_crawler.fetch_tdx_traffic(token)
+    return fetch_tdx_traffic_nonnegative(token)
 
 
 def build_route_xml(traffic_data: list, timestamp=None) -> str:
-    timestamp = timestamp or datetime.datetime.now()
-    period_name = get_current_period(timestamp)
-
     routes = []
     flows = []
+
+    for direction, turns in TURN_MOVEMENTS.items():
+        for turn, (from_edge, to_edge) in turns.items():
+            route_id = f"route_{direction}_{turn}"
+            routes.append(f'    <route id="{route_id}" edges="{from_edge} {to_edge}"/>')
 
     for entry in traffic_data:
         direction = entry.get("direction")
@@ -150,7 +253,6 @@ def build_route_xml(traffic_data: list, timestamp=None) -> str:
             route_id = f"route_{direction}_{turn}"
             flow_id = f"flow_{direction}_{turn}"
 
-            routes.append(f'    <route id="{route_id}" edges="{from_edge} {to_edge}"/>')
             flows.append(
                 f'    <flow id="{flow_id}" route="{route_id}" '
                 f'begin="0" end="{SIM_DURATION}" '
@@ -158,20 +260,16 @@ def build_route_xml(traffic_data: list, timestamp=None) -> str:
                 f'departLane="best" departSpeed="max"/>'
             )
 
-    lines = [
-        '<?xml version="1.0" encoding="UTF-8"?>',
-        '<routes>',
-        f'    <!-- generated_at: {escape(timestamp.isoformat(timespec="seconds"))} -->',
-        f'    <!-- intersection: {escape(INTERSECTION_NAME)} -->',
-        f'    <!-- period: {period_name} -->',
-        '    <vType id="car" accel="2.6" decel="4.5" sigma="0.5" length="5" maxSpeed="13.89"/>',
-        "",
-        *routes,
-        "",
-        *flows,
-        '</routes>',
-    ]
-    return "\n".join(lines) + "\n"
+    xml = '<?xml version="1.0" encoding="UTF-8"?>\n'
+    xml += '<routes>\n'
+    xml += '    <!-- 車輛類型 -->\n'
+    xml += '    <vType id="car" accel="2.6" decel="4.5" sigma="0.5" length="5" maxSpeed="13.89"/>\n\n'
+    xml += '    <!-- 路線定義 -->\n'
+    xml += '\n'.join(routes) + '\n\n'
+    xml += '    <!-- 車流（依 TDX/Mock 資料） -->\n'
+    xml += '\n'.join(flows) + '\n'
+    xml += '</routes>\n'
+    return xml
 
 
 def save_route_history(traffic_data: list, timestamp=None) -> str:
@@ -183,10 +281,12 @@ def save_route_history(traffic_data: list, timestamp=None) -> str:
     out_dir = os.path.join(HISTORY_DIR, intersection_slug, date_key)
     os.makedirs(out_dir, exist_ok=True)
 
-    out_file = os.path.join(out_dir, f"{time_key}_{intersection_slug}.rou.xml")
-    with open(out_file, "w", encoding="utf-8") as f:
+    route_file = os.path.join(out_dir, f"{time_key}_{intersection_slug}.rou.xml")
+
+    with open(route_file, "w", encoding="utf-8") as f:
         f.write(build_route_xml(traffic_data, timestamp=timestamp))
-    return out_file
+
+    return route_file
 
 
 def capture_once(token=None):
@@ -195,6 +295,11 @@ def capture_once(token=None):
 
     if not data:
         print("[歷史] Live 資料為空，本次不存檔")
+        return None
+
+    print(f"[歷史] 本次車流資料：{data}")
+    if not has_valid_route_data(data):
+        print("[歷史] 沒有可轉成 SUMO flow 的正流量資料，本次不存檔")
         return None
 
     out_file = save_route_history(data, timestamp=now)
