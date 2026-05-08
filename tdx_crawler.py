@@ -14,6 +14,26 @@ import datetime
 import requests
 
 # ──────────────────────────────────────────
+# 自動讀取 .env（與本檔同目錄）
+# ──────────────────────────────────────────
+def _load_dotenv() -> None:
+    env_file = os.path.join(os.path.dirname(os.path.abspath(__file__)), ".env")
+    if not os.path.exists(env_file):
+        return
+    with open(env_file, "r", encoding="utf-8") as fh:
+        for line in fh:
+            line = line.strip()
+            if not line or line.startswith("#") or "=" not in line:
+                continue
+            key, value = line.split("=", 1)
+            key   = key.strip()
+            value = value.strip().strip('"').strip("'")
+            if key and key not in os.environ:
+                os.environ[key] = value
+
+_load_dotenv()
+
+# ──────────────────────────────────────────
 # 設定區
 # ──────────────────────────────────────────
 USE_MOCK = False           # 切換 Mock / 真實 TDX
@@ -29,8 +49,9 @@ TDX_API_BASE  = "https://tdx.transportdata.tw/api/basic"
 TARGET_ROADS  = ["忠孝東路", "敦化南路"]
 
 # 快取檔案路徑（與 tdx_crawler.py 同目錄）
-_HERE       = os.path.dirname(os.path.abspath(__file__))
-CACHE_FILE  = os.path.join(_HERE, "traffic_cache.json")
+_HERE          = os.path.dirname(os.path.abspath(__file__))
+CACHE_FILE     = os.path.join(_HERE, "traffic_cache.json")
+AGGREGATE_FILE = os.path.join(_HERE, "aggregate_traffic.json")
 
 # 記憶體內 metadata 快取（同一個 Python session 只打一次靜態 API）
 _metadata_cache: dict = {}
@@ -297,23 +318,69 @@ def get_cached_traffic(period: str) -> list:
 
 
 # ──────────────────────────────────────────
+# 14 天匯總資料讀取
+# ──────────────────────────────────────────
+def load_aggregate_traffic(period: str) -> list:
+    """
+    從 aggregate_traffic.json 讀取指定時段的 14 天平均車流量。
+
+    回傳與 MOCK_DATA 相同格式的 list：
+        [{"direction": "EB", "volume_per_hour": 1156}, ...]
+
+    若 aggregate_traffic.json 不存在或該時段無資料，回傳空 list。
+    """
+    if not os.path.exists(AGGREGATE_FILE):
+        return []
+    try:
+        with open(AGGREGATE_FILE, "r", encoding="utf-8") as f:
+            agg = json.load(f)
+    except (json.JSONDecodeError, OSError):
+        return []
+
+    entries = agg.get("traffic", {}).get(period, [])
+    if not entries:
+        return []
+
+    dates = agg.get("days_collected", [])
+    date_range = f"{dates[0]} ～ {dates[-1]}" if dates else "?"
+    n = agg.get("sample_counts", {}).get(period, 0)
+    print(f"[匯總] 使用 aggregate_traffic.json / {period}"
+          f"（{date_range}，{n} 天平均）")
+
+    # 只回傳 direction + volume_per_hour（去掉 samples/std 等統計欄位）
+    return [
+        {"direction": e["direction"], "volume_per_hour": e["volume_per_hour"]}
+        for e in entries
+        if e.get("volume_per_hour", 0) > 0
+    ]
+
+
+# ──────────────────────────────────────────
 # 主入口
 # ──────────────────────────────────────────
 def get_traffic_data(period: str = "morning_peak") -> list:
     """
-    回傳指定時段的車流資料。
+    回傳指定時段的車流資料，優先序：
+      1. aggregate_traffic.json（14 天平均，最準確）
+      2. traffic_cache.json（昨天或最近的快取）
+      3. TDX Live 估算（即時值 × 時段因子）
+      4. Mock 資料（fallback）
 
-    USE_MOCK = True  → 回傳 Mock 固定數字
-    USE_MOCK = False → 讀取本地快取（traffic_cache.json）；
-                       若無快取則 fallback 到 Mock
+    USE_MOCK = True  → 直接回傳 Mock 固定數字（跳過所有以上步驟）
     """
     if USE_MOCK:
         data = [dict(d) for d in MOCK_DATA.get(period, MOCK_DATA["morning_peak"])]
         for d in data:
             d["period"] = period
         return data
-    else:
-        return get_cached_traffic(period)
+
+    # 1. 優先使用 14 天匯總
+    agg = load_aggregate_traffic(period)
+    if agg:
+        return agg
+
+    # 2–4. 快取 → Live 估算 → Mock（原有邏輯）
+    return get_cached_traffic(period)
 
 
 # ──────────────────────────────────────────

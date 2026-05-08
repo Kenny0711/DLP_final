@@ -17,5 +17,8 @@ nets/rl_env.sumocfg
 
 traffic_history/
 
+# 14 天匯總資料（含真實感測器數值，不上傳）
+aggregate_traffic.json
+
 # 本地簡介文件（不上傳）
 簡介.md
