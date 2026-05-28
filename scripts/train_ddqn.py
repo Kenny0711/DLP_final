@@ -28,7 +28,7 @@ import numpy as np
 import torch
 import torch.nn as nn
 
-HERE     = os.path.dirname(os.path.abspath(__file__))
+HERE     = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SRC_DIR  = os.path.join(HERE, "src")
 SUMO_DIR = os.path.join(os.path.dirname(HERE), "LCPO", "sumo_intersection")
 sys.path.insert(0, SRC_DIR)

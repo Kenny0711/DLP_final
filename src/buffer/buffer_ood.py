@@ -58,7 +58,10 @@ class OutOfDSampler(object):
                     if idx < self.cap:
                         self.states_fifo[idx] = states[i]
 
-        if self.i_win + len(states) <= self.win:
+        if len(states) >= self.win:
+            # Batch larger than window — keep only the last `win` states
+            self.recent_states[:] = states[-self.win:]
+        elif self.i_win + len(states) <= self.win:
             self.recent_states[self.i_win: self.i_win + len(states)] = states
         else:
             self.recent_states[self.i_win:] = states[:self.win - self.i_win]
