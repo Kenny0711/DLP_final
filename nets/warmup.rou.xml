@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<routes>
+    <!-- Warm-up (morning_peak only) — merged from 忠孝x復興南 + 忠孝x敦化 -->
+    <vType id="car" accel="2.6" decel="4.5" length="5" maxSpeed="13.9" sigma="0.5"/>
+
+    <!-- morning_peak : 0~3600s -->
+    <flow id="morning_peak_EB" type="car" from="W2C" to="C2E" begin="0" end="3600" vehsPerHour="319"/>
+    <flow id="morning_peak_WB" type="car" from="E2C" to="C2W" begin="0" end="3600" vehsPerHour="489"/>
+    <flow id="morning_peak_NB" type="car" from="S2C" to="C2N" begin="0" end="3600" vehsPerHour="138"/>
+    <flow id="morning_peak_SB" type="car" from="N2C" to="C2S" begin="0" end="3600" vehsPerHour="153"/>
+
+</routes>

@@ -1,0 +1,97 @@
+{
+  "2026-05-09": {
+    "off_peak": [{"direction":"EB","volume_per_hour":96},{"direction":"NB","volume_per_hour":189},{"direction":"SB","volume_per_hour":210}],
+    "evening_peak": [{"direction":"EB","volume_per_hour":596},{"direction":"NB","volume_per_hour":32},{"direction":"SB","volume_per_hour":36}]
+  },
+  "2026-05-10": {
+    "morning_peak": [{"direction":"EB","volume_per_hour":128}],
+    "off_peak": [{"direction":"EB","volume_per_hour":84},{"direction":"NB","volume_per_hour":162},{"direction":"SB","volume_per_hour":180}],
+    "evening_peak": [{"direction":"EB","volume_per_hour":92},{"direction":"NB","volume_per_hour":302},{"direction":"SB","volume_per_hour":336}]
+  },
+  "2026-05-11": {
+    "morning_peak": [{"direction":"EB","volume_per_hour":592},{"direction":"NB","volume_per_hour":237},{"direction":"SB","volume_per_hour":264}],
+    "off_peak": [{"direction":"EB","volume_per_hour":428},{"direction":"NB","volume_per_hour":129},{"direction":"SB","volume_per_hour":144}],
+    "evening_peak": [{"direction":"EB","volume_per_hour":324},{"direction":"NB","volume_per_hour":54},{"direction":"SB","volume_per_hour":60}]
+  },
+  "2026-05-12": {
+    "morning_peak": [{"direction":"EB","volume_per_hour":292},{"direction":"NB","volume_per_hour":27},{"direction":"SB","volume_per_hour":30}],
+    "off_peak": [{"direction":"EB","volume_per_hour":229},{"direction":"WB","volume_per_hour":254},{"direction":"NB","volume_per_hour":12},{"direction":"SB","volume_per_hour":14}],
+    "evening_peak": [{"direction":"EB","volume_per_hour":460},{"direction":"WB","volume_per_hour":900},{"direction":"NB","volume_per_hour":330},{"direction":"SB","volume_per_hour":367}]
+  },
+  "2026-05-13": {
+    "off_peak": [{"direction":"EB","volume_per_hour":334},{"direction":"WB","volume_per_hour":302},{"direction":"NB","volume_per_hour":183},{"direction":"SB","volume_per_hour":204}],
+    "evening_peak": [{"direction":"EB","volume_per_hour":318},{"direction":"WB","volume_per_hour":628},{"direction":"NB","volume_per_hour":45},{"direction":"SB","volume_per_hour":51}]
+  },
+  "2026-05-14": {
+    "morning_peak": [{"direction":"EB","volume_per_hour":355},{"direction":"WB","volume_per_hour":495},{"direction":"NB","volume_per_hour":18},{"direction":"SB","volume_per_hour":21}],
+    "off_peak": [{"direction":"EB","volume_per_hour":309},{"direction":"WB","volume_per_hour":254},{"direction":"NB","volume_per_hour":155},{"direction":"SB","volume_per_hour":172}],
+    "evening_peak": [{"direction":"EB","volume_per_hour":349},{"direction":"WB","volume_per_hour":513},{"direction":"NB","volume_per_hour":32},{"direction":"SB","volume_per_hour":36}]
+  },
+  "2026-05-15": {
+    "morning_peak": [{"direction":"EB","volume_per_hour":726},{"direction":"WB","volume_per_hour":732},{"direction":"NB","volume_per_hour":177},{"direction":"SB","volume_per_hour":196}],
+    "off_peak": [{"direction":"EB","volume_per_hour":378},{"direction":"WB","volume_per_hour":636},{"direction":"NB","volume_per_hour":88},{"direction":"SB","volume_per_hour":98}],
+    "evening_peak": [{"direction":"EB","volume_per_hour":339},{"direction":"WB","volume_per_hour":657},{"direction":"NB","volume_per_hour":46},{"direction":"SB","volume_per_hour":52}]
+  },
+  "2026-05-16": {
+    "morning_peak": [{"direction":"EB","volume_per_hour":286},{"direction":"WB","volume_per_hour":444},{"direction":"NB","volume_per_hour":16},{"direction":"SB","volume_per_hour":18}],
+    "off_peak": [{"direction":"EB","volume_per_hour":483},{"direction":"WB","volume_per_hour":573},{"direction":"NB","volume_per_hour":28},{"direction":"SB","volume_per_hour":31}],
+    "evening_peak": [{"direction":"EB","volume_per_hour":610},{"direction":"WB","volume_per_hour":760},{"direction":"NB","volume_per_hour":24},{"direction":"SB","volume_per_hour":27}]
+  },
+  "2026-05-17": {
+    "morning_peak": [{"direction":"EB","volume_per_hour":133},{"direction":"WB","volume_per_hour":151},{"direction":"NB","volume_per_hour":24},{"direction":"SB","volume_per_hour":27}],
+    "off_peak": [{"direction":"EB","volume_per_hour":426},{"direction":"WB","volume_per_hour":460},{"direction":"NB","volume_per_hour":41},{"direction":"SB","volume_per_hour":45}],
+    "evening_peak": [{"direction":"EB","volume_per_hour":208},{"direction":"WB","volume_per_hour":588},{"direction":"NB","volume_per_hour":203},{"direction":"SB","volume_per_hour":225}]
+  },
+  "2026-05-18": {
+    "morning_peak": [{"direction":"EB","volume_per_hour":319},{"direction":"WB","volume_per_hour":158},{"direction":"NB","volume_per_hour":200},{"direction":"SB","volume_per_hour":223}],
+    "off_peak": [{"direction":"EB","volume_per_hour":273},{"direction":"WB","volume_per_hour":355},{"direction":"NB","volume_per_hour":18},{"direction":"SB","volume_per_hour":21}],
+    "evening_peak": [{"direction":"EB","volume_per_hour":208},{"direction":"WB","volume_per_hour":588},{"direction":"NB","volume_per_hour":203},{"direction":"SB","volume_per_hour":225}]
+  },
+  "2026-05-19": {
+    "morning_peak": [{"direction":"EB","volume_per_hour":717},{"direction":"WB","volume_per_hour":784},{"direction":"NB","volume_per_hour":194},{"direction":"SB","volume_per_hour":216}],
+    "off_peak": [{"direction":"EB","volume_per_hour":597},{"direction":"WB","volume_per_hour":758},{"direction":"NB","volume_per_hour":77},{"direction":"SB","volume_per_hour":86}],
+    "evening_peak": [{"direction":"EB","volume_per_hour":345},{"direction":"WB","volume_per_hour":633},{"direction":"NB","volume_per_hour":373},{"direction":"SB","volume_per_hour":415}]
+  },
+  "2026-05-20": {
+    "off_peak": [{"direction":"EB","volume_per_hour":331},{"direction":"WB","volume_per_hour":348},{"direction":"NB","volume_per_hour":133},{"direction":"SB","volume_per_hour":148}],
+    "evening_peak": [{"direction":"EB","volume_per_hour":697},{"direction":"WB","volume_per_hour":998},{"direction":"NB","volume_per_hour":224},{"direction":"SB","volume_per_hour":249}]
+  },
+  "2026-05-21": {
+    "morning_peak": [{"direction":"EB","volume_per_hour":384},{"direction":"WB","volume_per_hour":483},{"direction":"NB","volume_per_hour":25},{"direction":"SB","volume_per_hour":28}],
+    "off_peak": [{"direction":"EB","volume_per_hour":270},{"direction":"WB","volume_per_hour":249},{"direction":"NB","volume_per_hour":18},{"direction":"SB","volume_per_hour":21}],
+    "evening_peak": [{"direction":"EB","volume_per_hour":685},{"direction":"WB","volume_per_hour":1032},{"direction":"NB","volume_per_hour":203},{"direction":"SB","volume_per_hour":225}]
+  },
+  "2026-05-22": {
+    "morning_peak": [{"direction":"EB","volume_per_hour":706},{"direction":"WB","volume_per_hour":759},{"direction":"NB","volume_per_hour":181},{"direction":"SB","volume_per_hour":201}],
+    "off_peak": [{"direction":"EB","volume_per_hour":232},{"direction":"WB","volume_per_hour":330},{"direction":"NB","volume_per_hour":51},{"direction":"SB","volume_per_hour":57}],
+    "evening_peak": [{"direction":"EB","volume_per_hour":652},{"direction":"WB","volume_per_hour":978},{"direction":"NB","volume_per_hour":177},{"direction":"SB","volume_per_hour":196}]
+  },
+  "2026-05-23": {
+    "morning_peak": [{"direction":"EB","volume_per_hour":120},{"direction":"WB","volume_per_hour":186},{"direction":"NB","volume_per_hour":69},{"direction":"SB","volume_per_hour":76}],
+    "off_peak": [{"direction":"EB","volume_per_hour":501},{"direction":"WB","volume_per_hour":636},{"direction":"NB","volume_per_hour":30},{"direction":"SB","volume_per_hour":33}],
+    "evening_peak": [{"direction":"EB","volume_per_hour":552},{"direction":"WB","volume_per_hour":777},{"direction":"NB","volume_per_hour":48},{"direction":"SB","volume_per_hour":54}]
+  },
+  "2026-05-24": {
+    "morning_peak": [{"direction":"EB","volume_per_hour":139},{"direction":"WB","volume_per_hour":108},{"direction":"NB","volume_per_hour":18},{"direction":"SB","volume_per_hour":20}],
+    "off_peak": [{"direction":"EB","volume_per_hour":70},{"direction":"WB","volume_per_hour":60},{"direction":"NB","volume_per_hour":43},{"direction":"SB","volume_per_hour":48}],
+    "evening_peak": [{"direction":"EB","volume_per_hour":301},{"direction":"WB","volume_per_hour":588},{"direction":"NB","volume_per_hour":244},{"direction":"SB","volume_per_hour":271}]
+  },
+  "2026-05-25": {
+    "morning_peak": [{"direction":"EB","volume_per_hour":301},{"direction":"WB","volume_per_hour":528},{"direction":"NB","volume_per_hour":27},{"direction":"SB","volume_per_hour":30}],
+    "off_peak": [{"direction":"EB","volume_per_hour":594},{"direction":"WB","volume_per_hour":1140},{"direction":"NB","volume_per_hour":259},{"direction":"SB","volume_per_hour":288}],
+    "evening_peak": [{"direction":"EB","volume_per_hour":594},{"direction":"WB","volume_per_hour":1140},{"direction":"NB","volume_per_hour":259},{"direction":"SB","volume_per_hour":288}]
+  },
+  "2026-05-26": {
+    "morning_peak": [{"direction":"EB","volume_per_hour":291},{"direction":"WB","volume_per_hour":636},{"direction":"NB","volume_per_hour":427},{"direction":"SB","volume_per_hour":475}],
+    "off_peak": [{"direction":"EB","volume_per_hour":298},{"direction":"WB","volume_per_hour":518},{"direction":"NB","volume_per_hour":70},{"direction":"SB","volume_per_hour":78}],
+    "evening_peak": [{"direction":"EB","volume_per_hour":304},{"direction":"WB","volume_per_hour":535},{"direction":"NB","volume_per_hour":410},{"direction":"SB","volume_per_hour":456}]
+  },
+  "2026-05-27": {
+    "morning_peak": [{"direction":"EB","volume_per_hour":273},{"direction":"WB","volume_per_hour":375},{"direction":"NB","volume_per_hour":38},{"direction":"SB","volume_per_hour":43}],
+    "off_peak": [{"direction":"EB","volume_per_hour":273},{"direction":"WB","volume_per_hour":375},{"direction":"NB","volume_per_hour":38},{"direction":"SB","volume_per_hour":43}],
+    "evening_peak": [{"direction":"EB","volume_per_hour":273},{"direction":"WB","volume_per_hour":375},{"direction":"NB","volume_per_hour":38},{"direction":"SB","volume_per_hour":43}]
+  },
+  "2026-05-28": {
+    "morning_peak": [{"direction":"EB","volume_per_hour":694},{"direction":"WB","volume_per_hour":871},{"direction":"NB","volume_per_hour":235},{"direction":"SB","volume_per_hour":261}]
+  }
+}
