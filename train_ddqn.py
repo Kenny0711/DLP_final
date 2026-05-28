@@ -36,6 +36,7 @@ sys.path.insert(0, SUMO_DIR)
 
 from neural_net.nn import FCNPolicy
 from agent.core_alg.core_dqn import train_dqn, soft_copy
+from utils.sumo_path import ensure_sumo_in_path  # noqa
 from sumo_env import SumoIntersectionEnv
 
 # ── Config ───────────────────────────────────────────────────────────────────

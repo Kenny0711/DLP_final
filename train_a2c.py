@@ -34,6 +34,7 @@ from neural_net.nn import FCNPolicy, FullyConnectNN
 from agent.core_alg.core_pg import train_actor_critic
 from buffer.buffer import TransitionBuffer
 from utils.rms import RunningMeanStd
+from utils.sumo_path import ensure_sumo_in_path  # noqa
 from sumo_env import SumoIntersectionEnv
 
 # ── Config ───────────────────────────────────────────────────────────────────
