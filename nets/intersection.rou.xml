@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<routes>
+    <!-- Junction J1 — generated from traffic_cache.json -->
+    <vType id="car" accel="2.6" decel="4.5" length="5" maxSpeed="13.9" sigma="0.5"/>
+
+    <!-- morning_peak : 0~3600s -->
+    <flow id="morning_peak_EB" type="car" from="W2C" to="C2E" begin="0" end="3600" vehsPerHour="370"/>
+    <flow id="morning_peak_WB" type="car" from="E2C" to="C2W" begin="0" end="3600" vehsPerHour="540"/>
+    <flow id="morning_peak_NB" type="car" from="S2C" to="C2N" begin="0" end="3600" vehsPerHour="172"/>
+    <flow id="morning_peak_SB" type="car" from="N2C" to="C2S" begin="0" end="3600" vehsPerHour="192"/>
+
+    <!-- off_peak : 3600~7200s -->
+    <flow id="off_peak_EB" type="car" from="W2C" to="C2E" begin="3600" end="7200" vehsPerHour="332"/>
+    <flow id="off_peak_WB" type="car" from="E2C" to="C2W" begin="3600" end="7200" vehsPerHour="489"/>
+    <flow id="off_peak_NB" type="car" from="S2C" to="C2N" begin="3600" end="7200" vehsPerHour="108"/>
+    <flow id="off_peak_SB" type="car" from="N2C" to="C2S" begin="3600" end="7200" vehsPerHour="120"/>
+
+    <!-- evening_peak : 7200~10800s -->
+    <flow id="evening_peak_EB" type="car" from="W2C" to="C2E" begin="7200" end="10800" vehsPerHour="435"/>
+    <flow id="evening_peak_WB" type="car" from="E2C" to="C2W" begin="7200" end="10800" vehsPerHour="657"/>
+    <flow id="evening_peak_NB" type="car" from="S2C" to="C2N" begin="7200" end="10800" vehsPerHour="286"/>
+    <flow id="evening_peak_SB" type="car" from="N2C" to="C2S" begin="7200" end="10800" vehsPerHour="318"/>
+
+</routes>
