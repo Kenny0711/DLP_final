@@ -28,6 +28,7 @@ HERE     = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SRC_DIR  = os.path.join(HERE, "src")
 SUMO_DIR = os.path.join(os.path.dirname(HERE), "LCPO", "sumo_intersection")
 sys.path.insert(0, SRC_DIR)
+sys.path.insert(0, HERE)
 sys.path.insert(0, SUMO_DIR)
 
 from neural_net.nn import FCNPolicy, FullyConnectNN
@@ -35,7 +36,7 @@ from agent.core_alg.core_pg import train_actor_critic
 from buffer.buffer import TransitionBuffer
 from utils.rms import RunningMeanStd
 from utils.sumo_path import ensure_sumo_in_path  # noqa
-from sumo_env import SumoIntersectionEnv
+from sumo_env_revised import SumoEnv
 
 # ── Config ───────────────────────────────────────────────────────────────────
 FULL_CFG   = os.path.join(HERE, "nets", "intersection.sumocfg")
@@ -78,7 +79,7 @@ def main():
         f"找不到 {WARMUP_PT}，請先執行 collect_warmup.py"
 
     # ── Environment ──────────────────────────────────────────────────────────
-    env = SumoIntersectionEnv(FULL_CFG, gui=False)   # 1080 steps per episode
+    env = SumoEnv(use_gui = False)   # 1080 steps per episode
 
     # ── Networks ─────────────────────────────────────────────────────────────
     policy_net = torch.jit.script(
