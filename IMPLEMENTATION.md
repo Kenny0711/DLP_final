@@ -3,12 +3,21 @@
 ## 執行順序 / Execution Order
 
 ```
-Step 0 (所有人先跑)   python collect_warmup.py
-Step 1 (Person 1)    python train_a2c.py
-Step 2 (Person 2)    python train_lcpo.py
-Step 3 (Person 3)    python train_ddqn.py
-Step 4 (Person 4)    python train_gru_lcpo.py
-Step 5 (彙整)        python plot_comparison.py
+# 訓練 Training
+Step 0 (所有人先跑)   python scripts/collect_warmup.py
+Step 1 (Person 1)    python scripts/train_a2c.py
+Step 2 (Person 2)    python scripts/train_lcpo.py
+Step 3 (Person 3)    python scripts/train_ddqn.py
+Step 4 (Person 4)    python scripts/train_gru_lcpo.py
+Step 5 (Baseline)    python scripts/train_fixed_time.py
+
+# 分析 Analysis (所有結果到齊後)
+python scripts/plot_comparison.py       # overall reward comparison
+python scripts/plot_adaptation.py       # adaptation speed after context switch
+python scripts/plot_gru_latent.py       # GRU h_t t-SNE visualization
+
+# 突發事件測試 Sudden burst test
+python scripts/train_fixed_time.py --sudden
 ```
 
 ---
@@ -19,6 +28,7 @@ Step 5 (彙整)        python plot_comparison.py
 |---|---|---|---|
 | `nets/warmup.rou.xml` | Warm-up 場景（僅早峰） | 3600s | 360 |
 | `nets/intersection.rou.xml` | 正式實驗（三段 context） | 10800s | 1080 |
+| `nets/sudden.rou.xml` | 突發事件場景（四段，EB/WB×2） | 12600s | 1260 |
 
 **車流資料來源 / Traffic data sources:**
 - 忠孝x復興南：`traffic_cache.json`（14 天，兩個路口合併中位數）
@@ -31,6 +41,7 @@ Step 5 (彙整)        python plot_comparison.py
 | morning_peak | 0–3600s | 0–359 | 319 / 489 / 138 / 153 |
 | off_peak | 3600–7200s | 360–719 | 331 / 418 / 91 / 102 |
 | evening_peak | 7200–10800s | 720–1079 | 349 / 657 / 203 / 225 |
+| **sudden_burst** | **10800–12600s** | **1080–1259** | **698 / 978 / 305 / 338** (EB/WB ×2) |
 
 ---
 
@@ -146,8 +157,54 @@ x_{t-k}, ..., x_t  →  GRU(24→64)  →  hidden  →  Linear(64→32)  →  ta
 zip -r results_person1.zip results/
 
 # On aggregation machine, unzip all and run
-python plot_comparison.py
+python scripts/plot_comparison.py
+python scripts/plot_adaptation.py
+python scripts/plot_gru_latent.py
 ```
+
+---
+
+## 評估指標 / Evaluation Metrics
+
+每個訓練腳本的 `log.csv` 包含以下欄位：
+
+| 欄位 | 說明 |
+|---|---|
+| `mean_reward` | 每 epoch 平均 reward（= -halting vehicles） |
+| `avg_wait` | 每 epoch 平均等待時間（秒，越低越好） |
+| `r_morning` | 早峰階段平均 reward |
+| `r_off` | 離峰階段平均 reward |
+| `r_evening` | 晚峰階段平均 reward |
+
+---
+
+## 突發事件場景 / Sudden Context Shift Scenario
+
+`nets/sudden.rou.xml` 在正常三段之後加入第四段突發車潮：
+- **時間**: 10800–12600s（env steps 1080–1259）
+- **車流**: EB=698、WB=978、NB=305、SB=338（約正常晚峰的 1.5–2 倍）
+- **用途**: 評估各算法對完全未見過的突發事件的鲁棒性
+
+```bash
+python scripts/train_fixed_time.py --sudden   # fixed-time on sudden scenario
+```
+
+---
+
+## 固定時制基準線 / Fixed-Time Baseline
+
+`scripts/train_fixed_time.py`：60s/60s 固定綠燈週期，不做任何學習。
+作為最基本的比較基準（論文中 Expected Results 提到的 Fixed-time control）。
+
+---
+
+## 視覺化腳本 / Visualization Scripts
+
+| 腳本 | 輸出 | 說明 |
+|---|---|---|
+| `scripts/plot_comparison.py` | `figures/reward_comparison.png` | 整體 reward 比較 |
+| `scripts/plot_adaptation.py` | `figures/adaptation_speed.png` | context 切換後適應速度 |
+| `scripts/plot_gru_latent.py` | `figures/gru_latent_tsne.png` | GRU h_t t-SNE 分群 |
 
 ---
 

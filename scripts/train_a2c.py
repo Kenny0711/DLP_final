@@ -105,7 +105,7 @@ def main():
 
     with open(LOG_PATH, "w", newline="") as f:
         csv.writer(f).writerow([
-            "epoch", "mean_reward",
+            "epoch", "mean_reward", "avg_wait",
             "r_morning", "r_off", "r_evening",
             "pg_loss", "v_loss",
         ])
@@ -115,6 +115,7 @@ def main():
     for epoch in range(N_EPOCHS):
         buff.reset_head()
         step_rewards = {c: [] for c in ("morning", "off", "evening")}
+        step_waits = []
         step_idx = 0
 
         while not buff.buffer_full():
@@ -124,6 +125,11 @@ def main():
             next_obs, rew, done, trunc, info = env.step(int(act[0]))
             buff.add_exp(obs, act, rew, next_obs, done, trunc)
             step_rewards[get_context(step_idx)].append(rew)
+            try:
+                _w = sum(_traci.edge.getWaitingTime(e) for e in ["N2C","S2C","E2C","W2C","C2N","C2S","C2E","C2W"]) / 8.0
+            except Exception:
+                _w = 0.0
+            step_waits.append(_w)
             step_idx += 1
 
             obs = next_obs
@@ -146,15 +152,16 @@ def main():
         r_m = np.mean(step_rewards["morning"])  if step_rewards["morning"]  else 0
         r_o = np.mean(step_rewards["off"])      if step_rewards["off"]      else 0
         r_e = np.mean(step_rewards["evening"])  if step_rewards["evening"]  else 0
-        mean_r = np.mean(rew_b)
+        mean_r = float(np.mean(rew_b))
+        avg_wait = float(np.mean(step_waits)) if step_waits else 0.0
 
         print(f"[A2C] epoch={epoch:4d} | "
               f"r̄={mean_r:7.2f} | "
-              f"morning={r_m:6.1f} off={r_o:6.1f} evening={r_e:6.1f} | "
+              f"morning={r_m:6.1f} off={r_o:6.1f} evening={r_e:6.1f} | wait={avg_wait:5.1f}s | "
               f"pg={pg_loss:.4f} v={v_loss:.4f}")
 
         with open(LOG_PATH, "a", newline="") as f:
-            csv.writer(f).writerow([epoch, mean_r, r_m, r_o, r_e, pg_loss, v_loss])
+            csv.writer(f).writerow([epoch, mean_r, avg_wait, r_m, r_o, r_e, pg_loss, v_loss])
 
         if epoch % SAVE_EVERY == 0:
             path = f"{RESULT_DIR}/models/model_{epoch}.pt"
