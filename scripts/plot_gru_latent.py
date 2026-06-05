@@ -128,7 +128,7 @@ def main():
         h_plot, l_plot = h_all, labels
 
     print(f"[tsne] Running t-SNE on {len(h_plot)} points…")
-    tsne = TSNE(n_components=2, perplexity=30, random_state=42, n_iter=1000)
+    tsne = TSNE(n_components=2, perplexity=30, random_state=42, max_iter=1000)
     z = tsne.fit_transform(h_plot)   # [N, 2]
 
     # ── Plot ─────────────────────────────────────────────────────────────────

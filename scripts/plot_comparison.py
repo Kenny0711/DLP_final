@@ -18,8 +18,8 @@ import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
 import numpy as np
 
-RESULT_DIR  = os.path.join(os.path.dirname(os.path.abspath(__file__)), "results")
-FIG_DIR     = os.path.join(os.path.dirname(os.path.abspath(__file__)), "figures")
+RESULT_DIR  = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "results")
+FIG_DIR     = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "figures")
 os.makedirs(FIG_DIR, exist_ok=True)
 
 ALGORITHMS = {
