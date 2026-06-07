@@ -42,7 +42,7 @@ CKPT_PATH     = os.path.join(RESULT_DIR, "checkpoint.pt")
 TRAJ_PATH     = os.path.join(RESULT_DIR, "trajectory.pkl")
 LOG_PATH      = os.path.join(RESULT_DIR, "log.csv")
 
-OBS_DIM       = 24      # observation dimension / 觀測維度
+OBS_DIM       = 28      # observation dimension / 觀測維度 (24 queue/wait/speed + 4 flow-rate)
 ACT_BINS      = 2       # keep=0 / switch=1
 NN_HIDS       = [128, 128]
 WARMUP_EPOCHS = 200     # warm-up training epochs / warm-up 訓練輪數
@@ -151,10 +151,10 @@ def main():
 
     # ── Save trajectory / 儲存 trajectory ───────────────────────────────────
     traj = {
-        "obs":      np.array(traj_obs,  dtype=np.float32),   # [T, 24]
+        "obs":      np.array(traj_obs,  dtype=np.float32),   # [T, 28]
         "actions":  np.array(traj_act,  dtype=np.int64),     # [T]
         "rewards":  np.array(traj_rew,  dtype=np.float32),   # [T]
-        "next_obs": np.array(traj_next, dtype=np.float32),   # [T, 24]
+        "next_obs": np.array(traj_next, dtype=np.float32),   # [T, 28]
         "dones":    np.array(traj_done, dtype=bool),          # [T]
     }
     with open(TRAJ_PATH, "wb") as f:

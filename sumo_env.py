@@ -26,10 +26,32 @@ Usage
 from __future__ import annotations
 
 import os
+import shutil
 import sys
 from typing import Dict, List, Tuple
 
 import numpy as np
+
+
+def _load_local_env() -> None:
+    """Load simple KEY=VALUE pairs from .env before importing tdx_crawler."""
+    env_file = os.path.join(os.path.dirname(os.path.abspath(__file__)), ".env")
+    if not os.path.exists(env_file):
+        return
+
+    with open(env_file, "r", encoding="utf-8") as fh:
+        for line in fh:
+            line = line.strip()
+            if not line or line.startswith("#") or "=" not in line:
+                continue
+            key, value = line.split("=", 1)
+            key = key.strip()
+            value = value.strip().strip('"').strip("'")
+            if key and key not in os.environ:
+                os.environ[key] = value
+
+
+_load_local_env()
 
 # ── SUMO path setup ────────────────────────────────────────────────────────────
 SUMO_HOME  = os.environ.get("SUMO_HOME", r"C:\Program Files (x86)\Eclipse\Sumo")
@@ -40,6 +62,7 @@ if SUMO_TOOLS not in sys.path:
 import traci  # noqa: E402  (must come after sys.path update)
 
 # ── Project imports ────────────────────────────────────────────────────────────
+import tdx_crawler
 from tdx_crawler      import get_traffic_data
 from sumo_scene_builder import TURN_MOVEMENTS, TURN_RATIOS
 
@@ -59,6 +82,29 @@ CONTEXT_WINDOWS: List[Tuple[int, int, str]] = [
     (5_000,  9_999,  "off_peak"),
     (10_000, 14_999, "evening_peak"),
 ]
+
+
+def _get_sumo_binary(use_gui: bool) -> str:
+    """
+    Resolve the SUMO executable on both Linux/macOS and Windows.
+
+    Linux packages usually install ``sumo`` / ``sumo-gui`` into PATH, while the
+    old project default pointed at ``SUMO_HOME/bin/*.exe`` for Windows.
+    """
+    binary_name = "sumo-gui" if use_gui else "sumo"
+    path_binary = shutil.which(binary_name)
+    if path_binary:
+        return path_binary
+
+    windows_name = "sumo-gui.exe" if use_gui else "sumo.exe"
+    home_binary = os.path.join(SUMO_HOME, "bin", windows_name)
+    if os.path.exists(home_binary):
+        return home_binary
+
+    raise FileNotFoundError(
+        f"Cannot find SUMO binary '{binary_name}'. Install SUMO or set SUMO_HOME. "
+        f"Tried PATH and {home_binary}"
+    )
 
 # ── Traffic-light constants ────────────────────────────────────────────────────
 TL_ID           = "center"   # matches node id in cross.nod.xml
@@ -145,6 +191,16 @@ class SumoEnv:
         * 36 ``<flow>`` elements (12 per context × 3 contexts), each carrying
           ``begin`` and ``end`` attributes that match the context windows.
         """
+        if not tdx_crawler.USE_MOCK and (
+            tdx_crawler.CLIENT_ID in ("YOUR_CLIENT_ID", "your_client_id_here")
+            or tdx_crawler.CLIENT_SECRET in ("YOUR_CLIENT_SECRET", "your_client_secret_here")
+        ):
+            raise RuntimeError(
+                "TDX credentials are not set. Fill DLP_final/.env with real "
+                "TDX_CLIENT_ID and TDX_CLIENT_SECRET, or set USE_MOCK=True in "
+                "tdx_crawler.py for local testing."
+            )
+
         # ── Fetch traffic data for every context ──────────────────────────────
         context_data: Dict[str, Dict[str, int]] = {}
         for _, _, ctx in CONTEXT_WINDOWS:
@@ -351,10 +407,7 @@ class SumoEnv:
         self._context       = "morning_peak"
 
         # Start SUMO
-        binary = os.path.join(
-            SUMO_HOME, "bin",
-            "sumo-gui.exe" if self._use_gui else "sumo.exe",
-        )
+        binary = _get_sumo_binary(self._use_gui)
         sumo_cmd = [
             binary,
             "-c", CFG_FILE,
@@ -446,7 +499,7 @@ if __name__ == "__main__":
     print(" SumoEnv — random agent sanity test")
     print("=" * 60)
 
-    env = SumoEnv(use_gui=True)
+    env = SumoEnv(use_gui=False)
 
     try:
         obs = env.reset()

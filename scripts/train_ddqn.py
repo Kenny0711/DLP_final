@@ -46,7 +46,7 @@ TRAJ_PATH   = os.path.join(HERE, "results", "warmup", "trajectory.pkl")
 RESULT_DIR  = os.path.join(HERE, "results", "ddqn")
 LOG_PATH    = os.path.join(RESULT_DIR, "log.csv")
 
-OBS_DIM     = 24
+OBS_DIM     = 28
 ACT_BINS    = 2
 NN_HIDS     = [128, 128]
 

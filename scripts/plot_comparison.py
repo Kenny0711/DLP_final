@@ -1,15 +1,13 @@
 """
 Aggregate & plot results from all 4 algorithms.
-彙整四個算法的結果並畫圖比較。
 
-Usage / 使用方式:
-  把 4 台電腦的 results/ 資料夾合併到同一台，再執行：
-  python plot_comparison.py
+Usage:
+  python scripts/plot_comparison.py
 
-Output / 輸出:
-  figures/reward_comparison.png    整體 reward 趨勢比較
-  figures/context_comparison.png   各 context 的 reward 比較
-  figures/forgetting.png           Catastrophic Forgetting 指標
+Output:
+  figures/reward_comparison.png
+  figures/context_comparison.png
+  figures/forgetting.png
 """
 
 import os
@@ -18,18 +16,21 @@ import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
 import numpy as np
 
+plt.rcParams["axes.unicode_minus"] = False
+
 RESULT_DIR  = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "results")
 FIG_DIR     = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "figures")
 os.makedirs(FIG_DIR, exist_ok=True)
 
+# line style: solid for RL, dashed for LCPO (A2C and LCPO overlap — use different dash)
 ALGORITHMS = {
-    "a2c":      ("A2C (baseline)",         "tab:blue"),
-    "lcpo":     ("LCPO",                   "tab:orange"),
-    "ddqn":     ("DDQN",                   "tab:green"),
-    "gru_lcpo": ("GRU-LCPO (proposed)",    "tab:red"),
+    "a2c":      ("A2C (baseline)",         "tab:blue",   "-",   1.2),
+    "lcpo":     ("LCPO",                   "tab:orange", "--",  1.1),
+    "ddqn":     ("DDQN",                   "tab:green",  "-",   1.2),
+    "gru_lcpo": ("GRU-LCPO (proposed)",    "tab:red",    "-",   1.5),
 }
 
-SMOOTH = 20    # rolling-average window
+SMOOTH = 20
 
 
 def load_log(algo: str) -> pd.DataFrame | None:
@@ -46,45 +47,44 @@ def smooth(series, w: int = SMOOTH) -> pd.Series:
     return series.rolling(w, min_periods=1).mean()
 
 
-# ── Plot 1: Overall mean reward comparison ───────────────────────────────────
 def plot_reward_comparison(logs: dict):
     fig, ax = plt.subplots(figsize=(10, 5))
 
-    for algo, (label, color) in ALGORITHMS.items():
+    for algo, (label, color, ls, lw) in ALGORITHMS.items():
         df = logs.get(algo)
         if df is None or "mean_reward" not in df.columns:
             continue
         s = smooth(df["mean_reward"])
-        ax.plot(df["epoch"], s, label=label, color=color)
+        ax.plot(df["epoch"], s, label=label, color=color, linestyle=ls, linewidth=lw)
 
-    ax.set_xlabel("Epoch 訓練輪數")
-    ax.set_ylabel("Mean Reward (smoothed)")
-    ax.set_title("Algorithm Comparison — Overall Reward\n各算法整體 Reward 比較")
+    ax.set_xlabel("Epoch")
+    ax.set_ylabel("Mean Reward (smoothed, w=20)")
+    ax.set_title("Algorithm Comparison — Overall Mean Reward\n(A2C and LCPO overlap: LCPO OOD triggered 0/500 epochs)")
     ax.legend()
     ax.grid(alpha=0.3)
 
     path = os.path.join(FIG_DIR, "reward_comparison.png")
     fig.savefig(path, dpi=150, bbox_inches="tight")
-    print(f"[plot] Saved → {path}")
+    print(f"[plot] Saved -> {path}")
     plt.close(fig)
 
 
-# ── Plot 2: Per-context reward ───────────────────────────────────────────────
 def plot_context_comparison(logs: dict):
-    contexts = [("r_morning", "Morning Peak 早峰"),
-                ("r_off",     "Off-Peak 離峰"),
-                ("r_evening", "Evening Peak 晚峰")]
+    contexts = [("r_morning", "Morning Peak"),
+                ("r_off",     "Off-Peak"),
+                ("r_evening", "Evening Peak")]
 
     fig, axes = plt.subplots(1, 3, figsize=(15, 5), sharey=True)
-    fig.suptitle("Per-Context Reward / 各時段 Reward 比較")
+    fig.suptitle("Per-Context Reward Comparison")
 
     for ax, (col, title) in zip(axes, contexts):
-        for algo, (label, color) in ALGORITHMS.items():
+        for algo, (label, color, ls, lw) in ALGORITHMS.items():
             df = logs.get(algo)
             if df is None or col not in df.columns:
                 continue
             s = smooth(df[col])
-            ax.plot(df["epoch"], s, label=label, color=color)
+            ax.plot(df["epoch"], s, label=label, color=color,
+                    linestyle=ls, linewidth=lw)
         ax.set_title(title)
         ax.set_xlabel("Epoch")
         ax.grid(alpha=0.3)
@@ -94,44 +94,38 @@ def plot_context_comparison(logs: dict):
 
     path = os.path.join(FIG_DIR, "context_comparison.png")
     fig.savefig(path, dpi=150, bbox_inches="tight")
-    print(f"[plot] Saved → {path}")
+    print(f"[plot] Saved -> {path}")
     plt.close(fig)
 
 
-# ── Plot 3: Catastrophic Forgetting metric ───────────────────────────────────
-# Measure: how much does morning_peak performance degrade after the context
-#          shifts to off_peak and evening_peak?
-# 指標：訓練後期（off/evening context）時，morning_peak 的 reward 是否下降？
 def plot_forgetting(logs: dict):
     fig, ax = plt.subplots(figsize=(8, 5))
 
-    for algo, (label, color) in ALGORITHMS.items():
+    for algo, (label, color, ls, lw) in ALGORITHMS.items():
         df = logs.get(algo)
         if df is None or "r_morning" not in df.columns:
             continue
-
-        # Compare morning reward in first 25% vs last 25% of training
         n = len(df)
         early  = df["r_morning"].iloc[:n // 4].mean()
         late   = df["r_morning"].iloc[-n // 4:].mean()
-        forget = early - late   # positive = forgetting occurred
+        forget = early - late
 
         ax.bar(label, forget, color=color, alpha=0.8)
         ax.text(label, forget + 0.5, f"{forget:.1f}", ha="center", fontsize=9)
 
-    ax.set_ylabel("Forgetting Score (↓ better)\n= early morning reward − late morning reward")
-    ax.set_title("Catastrophic Forgetting Metric\n早峰 reward 退化量（越小代表越不 forget）")
+    ax.set_ylabel("Forgetting Score (lower = less forgetting)\n= early morning reward - late morning reward")
+    ax.set_title("Catastrophic Forgetting Metric\n(morning reward degradation after context shift)")
     ax.axhline(0, color="black", linewidth=0.8, linestyle="--")
     ax.grid(axis="y", alpha=0.3)
 
     path = os.path.join(FIG_DIR, "forgetting.png")
     fig.savefig(path, dpi=150, bbox_inches="tight")
-    print(f"[plot] Saved → {path}")
+    print(f"[plot] Saved -> {path}")
     plt.close(fig)
 
 
 def main():
-    print("Loading logs…")
+    print("Loading logs...")
     logs = {}
     for algo in ALGORITHMS:
         df = load_log(algo)
@@ -139,7 +133,7 @@ def main():
             logs[algo] = df
 
     if not logs:
-        print("No result CSVs found. Run the training scripts first.")
+        print("No result CSVs found.")
         return
 
     plot_reward_comparison(logs)

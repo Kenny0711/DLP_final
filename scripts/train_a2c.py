@@ -36,7 +36,7 @@ from agent.core_alg.core_pg import train_actor_critic
 from buffer.buffer import TransitionBuffer
 from utils.rms import RunningMeanStd
 from utils.sumo_path import ensure_sumo_in_path  # noqa
-from sumo_env_revised import SumoEnv
+from sumo_env import SumoIntersectionEnv as SumoEnv
 
 # ── Config ───────────────────────────────────────────────────────────────────
 FULL_CFG   = os.path.join(HERE, "nets", "intersection.sumocfg")
@@ -44,7 +44,7 @@ WARMUP_PT  = os.path.join(HERE, "results", "warmup", "checkpoint.pt")
 RESULT_DIR = os.path.join(HERE, "results", "a2c")
 LOG_PATH   = os.path.join(RESULT_DIR, "log.csv")
 
-OBS_DIM    = 24
+OBS_DIM    = 28
 ACT_BINS   = 2
 NN_HIDS    = [128, 128]
 N_EPOCHS   = 500       # 完整訓練輪數
@@ -79,7 +79,7 @@ def main():
         f"找不到 {WARMUP_PT}，請先執行 collect_warmup.py"
 
     # ── Environment ──────────────────────────────────────────────────────────
-    env = SumoEnv(use_gui = False)   # 1080 steps per episode
+    env = SumoEnv(FULL_CFG, gui=False)   # 1080 steps per episode
 
     # ── Networks ─────────────────────────────────────────────────────────────
     policy_net = torch.jit.script(

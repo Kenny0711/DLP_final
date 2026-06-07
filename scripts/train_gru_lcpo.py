@@ -50,7 +50,7 @@ TRAJ_PATH   = os.path.join(HERE, "results", "warmup", "trajectory.pkl")
 RESULT_DIR  = os.path.join(HERE, "results", "gru_lcpo")
 LOG_PATH    = os.path.join(RESULT_DIR, "log.csv")
 
-OBS_DIM     = 24
+OBS_DIM     = 28
 ACT_BINS    = 2
 NN_HIDS     = [128, 128]
 
@@ -59,7 +59,7 @@ GRU_HIDDEN  = 64    # GRU hidden state size
 CONTEXT_DIM = 32    # output h_t dimension
 K           = 10    # history window length / 歷史窗口長度
 
-AUG_DIM     = OBS_DIM + CONTEXT_DIM   # 24 + 32 = 56
+AUG_DIM     = OBS_DIM + CONTEXT_DIM   # 28 + 32 = 60
 
 # BC warm-up / 行為克隆 warm-up
 BC_EPOCHS      = 50     # number of BC training epochs

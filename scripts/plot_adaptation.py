@@ -1,25 +1,12 @@
 """
 Adaptation Speed Plot
-=====================
-Visualises how quickly each algorithm recovers performance after a
-context transition (morning→off at epoch step 360, off→evening at 720).
-
-Uses per-context reward columns (r_morning, r_off, r_evening) from each
-algorithm's log.csv as a proxy for adaptation speed:
-  - r_off in the epochs right after training begins shows how fast
-    the policy adapts to the off-peak context
-  - Same for r_evening
-
-Two plots:
-  1. Rolling reward per context over training epochs (line chart)
-  2. "Adaptation gap" = |r_context_early − r_context_late| per algorithm (bar)
-
-Output / 輸出:
-  figures/adaptation_speed.png
-  figures/context_reward_curves.png
 
 Usage:
   python scripts/plot_adaptation.py
+
+Output:
+  figures/adaptation_speed.png
+  figures/context_reward_curves.png
 """
 
 import os, sys
@@ -28,17 +15,19 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
 
+plt.rcParams["axes.unicode_minus"] = False
+
 HERE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 RESULT_DIR = os.path.join(HERE, "results")
 FIG_DIR    = os.path.join(HERE, "figures")
 os.makedirs(FIG_DIR, exist_ok=True)
 
 ALGORITHMS = {
-    "a2c":        ("A2C (baseline)",      "tab:blue"),
-    "lcpo":       ("LCPO",                "tab:orange"),
-    "ddqn":       ("DDQN",                "tab:green"),
-    "gru_lcpo":   ("GRU-LCPO (proposed)", "tab:red"),
-    "fixed_time": ("Fixed-Time",          "tab:gray"),
+    "a2c":        ("A2C (baseline)",      "tab:blue",   "-",   1.2),
+    "lcpo":       ("LCPO",                "tab:orange", "--",  1.1),
+    "ddqn":       ("DDQN",                "tab:green",  "-",   1.2),
+    "gru_lcpo":   ("GRU-LCPO (proposed)", "tab:red",    "-",   1.5),
+    "fixed_time": ("Fixed-Time",          "tab:gray",   ":",   1.0),
 }
 SMOOTH = 20
 
@@ -54,23 +43,23 @@ def smooth(s, w=SMOOTH):
     return s.rolling(w, min_periods=1).mean()
 
 
-# ── Plot 1: Per-context reward curves over training ──────────────────────────
 def plot_context_curves(logs: dict):
     contexts = [
-        ("r_morning", "Morning Peak 早峰",  0),
-        ("r_off",     "Off-Peak 離峰",       1),
-        ("r_evening", "Evening Peak 晚峰",   2),
+        ("r_morning", "Morning Peak"),
+        ("r_off",     "Off-Peak"),
+        ("r_evening", "Evening Peak"),
     ]
     fig, axes = plt.subplots(1, 3, figsize=(15, 5), sharey=False)
-    fig.suptitle("Per-Context Reward Over Training\n各時段 Reward 訓練曲線", fontsize=13)
+    fig.suptitle("Per-Context Reward Over Training", fontsize=13)
 
-    for ax, (col, title, _) in zip(axes, contexts):
-        for algo, (label, color) in ALGORITHMS.items():
+    for ax, (col, title) in zip(axes, contexts):
+        for algo, (label, color, ls, lw) in ALGORITHMS.items():
             df = logs.get(algo)
             if df is None or col not in df.columns:
                 continue
             s = smooth(df[col])
-            ax.plot(df["epoch"], s, label=label, color=color, linewidth=1.5)
+            ax.plot(df["epoch"], s, label=label, color=color,
+                    linestyle=ls, linewidth=lw)
         ax.set_title(title)
         ax.set_xlabel("Epoch")
         ax.set_ylabel("Mean Reward")
@@ -84,21 +73,18 @@ def plot_context_curves(logs: dict):
     plt.close(fig)
 
 
-# ── Plot 2: Adaptation speed — reward drop right after context switch ─────────
-# Proxy: compare r_context in first 25 epochs (before agent adapts) vs
-#        last 50 epochs (fully adapted).  Smaller gap = faster adaptation.
 def plot_adaptation_gap(logs: dict):
     fig, axes = plt.subplots(1, 2, figsize=(12, 5))
-    fig.suptitle("Adaptation Speed After Context Switch\n切換後適應速度（gap 越小代表越快適應）", fontsize=13)
+    fig.suptitle("Adaptation Speed After Context Switch\n(smaller gap = faster adaptation)", fontsize=13)
 
     contexts = [
-        ("r_off",     "morning→off-peak shift",    axes[0]),
-        ("r_evening", "off-peak→evening shift",     axes[1]),
+        ("r_off",     "morning -> off-peak shift",    axes[0]),
+        ("r_evening", "off-peak -> evening shift",     axes[1]),
     ]
 
     for col, title, ax in contexts:
         labels, gaps, colors = [], [], []
-        for algo, (label, color) in ALGORITHMS.items():
+        for algo, (label, color, ls, lw) in ALGORITHMS.items():
             df = logs.get(algo)
             if df is None or col not in df.columns:
                 continue
@@ -116,7 +102,7 @@ def plot_adaptation_gap(logs: dict):
                     f"{g:.2f}", ha="center", va="bottom", fontsize=9)
 
         ax.set_title(title)
-        ax.set_ylabel("|early reward − late reward|  (↓ better)")
+        ax.set_ylabel("|early reward - late reward| (lower = better)")
         ax.tick_params(axis="x", rotation=15)
         ax.grid(axis="y", alpha=0.3)
 

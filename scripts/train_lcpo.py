@@ -44,7 +44,7 @@ WARMUP_PT  = os.path.join(HERE, "results", "warmup", "checkpoint.pt")
 RESULT_DIR = os.path.join(HERE, "results", "lcpo")
 LOG_PATH   = os.path.join(RESULT_DIR, "log.csv")
 
-OBS_DIM    = 24
+OBS_DIM    = 28
 ACT_BINS   = 2
 NN_HIDS    = [128, 128]
 N_EPOCHS   = 500
@@ -74,14 +74,19 @@ def get_context(step: int) -> str:
 
 def make_ood_detector(obs_dim: int):
     """
-    OOD detector in raw obs space.
-    A stored obs is OOD if its L2 distance from recent cluster > 2σ.
-    OOD 偵測：若舊 obs 與近期 obs 的距離超過 2σ，視為 OOD。
+    OOD detector using only the flow-rate signal dimensions (indices 24:obs_dim).
+    These 4 dims have low within-context variance and high between-context variance,
+    making them ideal for context-shift detection.  Using the full obs (including
+    queue/wait/speed) inflates variance and raises the threshold above the signal.
     """
+    FLOW_START = 24
+    FLOW_DIM   = obs_dim - FLOW_START   # 4
     def _is_different(new_obs: np.ndarray, recent_obs: np.ndarray) -> np.ndarray:
-        mu  = recent_obs.mean(axis=0)
-        var = recent_obs.var(axis=0).mean() + 1e-6
-        return np.linalg.norm(new_obs - mu, axis=-1) > 2.0 * np.sqrt(var * obs_dim)
+        new_f    = new_obs[..., FLOW_START:]
+        recent_f = recent_obs[:, FLOW_START:]
+        mu  = recent_f.mean(axis=0)
+        var = recent_f.var(axis=0).mean() + 1e-6
+        return np.linalg.norm(new_f - mu, axis=-1) > 2.0 * np.sqrt(var * FLOW_DIM)
     return _is_different
 
 
@@ -127,7 +132,7 @@ def main():
 
     with open(LOG_PATH, "w", newline="") as f:
         csv.writer(f).writerow([
-            "epoch", "mean_reward", "avg_wait",
+            "epoch", "mean_reward",
             "r_morning", "r_off", "r_evening",
             "pg_loss", "v_loss", "ood_size",
         ])
@@ -186,7 +191,7 @@ def main():
 
         print(f"[LCPO] epoch={epoch:4d} | "
               f"r̄={mean_r:7.2f} | "
-              f"morning={r_m:6.1f} off={r_o:6.1f} evening={r_e:6.1f} | wait={avg_wait:5.1f}s | "
+              f"morning={r_m:6.1f} off={r_o:6.1f} evening={r_e:6.1f} | "
               f"ood={len(ood_raw):4d} | pg={pg_loss:.4f}")
 
         with open(LOG_PATH, "a", newline="") as f:
